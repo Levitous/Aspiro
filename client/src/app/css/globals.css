@@ -1,0 +1,347 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* START GLOBAL SETTINGS ----------------------------------- */
+
+:root {
+  --foreground: #f5f5f5;
+  --cosmiclatte: #FFF8E8;
+  --papayawhip: #FFF1D0;
+  --auburn: #f54f43;
+  --steel: rgba(40, 42, 46, 0.7);
+  --aspirolight: #a1382d;
+  --aspirodark: #6f201b;
+  --aspiro: linear-gradient(0deg, var(--aspirodark), var(--aspirolight));
+  --press: linear-gradient(0deg,  var(--aspirolight), var(--aspirodark));
+  --background: radial-gradient(#323232, #212121);
+  --error: linear-gradient(0deg, #f77336, #f7a036);
+  --glass: linear-gradient(3, rgba(25, 25, 25, 0.50), rgba(100, 100, 100, 0.30), rgba(25, 25, 25, 0.50));
+  --blackIce: linear-gradient(179deg, rgba(9, 9, 9, 0.5), rgba(33, 33, 33, 0.60), rgba(25, 25, 25, 0.5));
+  --brightblue: linear-gradient(0deg,#2688b9,#66bde8);
+  --brightbluepressed: linear-gradient(0deg,#66bde8, #1b6286);
+  --slate: linear-gradient(0deg, rgba(32, 32, 32, 0.5), rgba(53, 53, 53, 0.3));
+  font-family: Roboto;
+  font-size: 1rem;
+}
+::content{
+  width: device-width;
+  min-width: 350px;
+}
+/* If commented out it does full color background */
+HTML, body{
+  color: rgb(var(--foreground));
+  background: var(--background);
+  background-repeat: norepeat;
+  background-attachment: fixed;
+  min-width: 350px;
+  max-width: 100vw;
+}
+
+/* START NAV BAR SETTINGS ----------------------------------- */
+header{
+  min-width: 350px;
+  display: inline-flex;
+  width: 100%;
+  background: var(--aspiro);
+  border: 1px solid black;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  min-height: 50px;
+}
+.aspirotitle{
+  margin-right: 0.5rem;
+}
+
+
+#nav{
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  width: 100%;
+  max-width: 1200px;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#navhome{
+  display: inline-flex;
+  flex-direction: row;
+  font-size: 2rem;
+  flex-direction: row;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+}
+#navhome:hover{
+  color: linear-gradient(0deg, #951f16, #f54f43);
+}
+
+#homeIcon{
+  display: flex;
+  background: linear-gradient(0deg, #2b2726, #574c4b);
+  border: 2px solid #555555;
+  border-radius: 50%;
+  font-size: 2.3rem;
+  padding: 0;
+  margin: 0;
+}
+
+#homeIcon:hover{
+  background: linear-gradient(0deg, #951f16, #f54f43);
+  border: 2px solid var(--auburn);
+}
+#homeIcon:active{
+  background: linear-gradient(0deg, #f54f43,  #951f16);
+}
+
+#navsearch{
+  display: flex;
+  flex-grow: 1;
+  /* For nav searchbar settings, go to search.css in components folder. */
+}
+.navItem{
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  justify-self: center;
+  justify-items: center;
+}
+.navIcon{
+  background: linear-gradient(0, #2b2726, #574c4b);
+  border: 1px solid #555555;
+  font-size: 2.4rem;
+  border-radius: 50%;
+  color: rgba(255,255,255,0.65);
+}
+.navIcon:hover{
+  border: 1px solid var(--auburn);
+  color: rgba(255,255,255,0.85);
+}
+.avatarbutton{ /* This keeps the conditional buttons in line. */
+  border: 2px solid gray;
+  transition: transform 0.01s ease;
+}
+.avatarbutton:hover{ /* This keeps the conditional buttons in line. */
+  background: linear-gradient(0deg, #951f16, #f54f43);
+  border: 2px solid var(--auburn);
+}
+.avatarbutton:active{
+  background: linear-gradient(0deg, #f54f43,  #951f16);
+}
+
+.link {
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-family: Roboto;
+  color:  var(--foreground);
+  transition: transform 0.01s ease;
+}
+
+input{
+  color: whitesmoke;
+  background: var(--blackIce);
+  border: 1px solid #444444;
+}
+select{
+  color: whitesmoke;
+  background: var(--blackIce);
+  border: 1px solid #444444;
+}
+select option{
+  color: whitesmoke;
+  background-color: #111111;
+  border: 1px solid #444444;
+  border-radius: 1;
+}
+select option:hover{
+  background-color: #333333;
+}
+
+/* START MAIN AREA SETTINGS ----------------------------------- */
+main{
+  max-width: 1200px;
+  min-width: 350px;
+  width: 96%;
+  display: flex;
+  margin-left: auto;
+  margin-right: auto;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.titlebox{
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  max-width: 800px;
+  margin: 0 auto 0 auto;
+  padding: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-family: Roboto;
+  font-size: 1.5rem;
+  background: var(--aspiro);
+  border-radius: 0.1rem;
+  border: 2px solid black;
+  box-shadow: rgba(10, 10, 11, 0.8) 0px 50px 100px -20px, rgba(19, 15, 15, 0.8) 0px 30px 60px -30px;
+  color: var(--foreground);
+}
+.titlebox img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.titleboximage{
+  padding: 1rem 1rem 0 1rem;
+  object-fit: cover;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-grow: 1;
+}
+.titleboxtext{
+  display: flex;
+  background: var(--glass);
+  width: 100%;
+  justify-content: center;
+  padding: 0.5rem;
+  align-items: center;
+  font-size: 1.5rem;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  color: var(--foreground);
+}
+
+#logout{
+  display: inline-flex;
+  flex-direction: row;
+  width: 100%;
+}
+.dropdownIcon{
+  display: inline-flex;
+  margin-right: 1rem;
+  font-size: 1.5rem;
+}
+.dropdownbutton{
+  width: 100%;
+  height: 100%;
+  text-align:start;
+}
+.welcomemessage{
+  pointer-events: none;
+  padding: 1rem;
+}
+#sportselect{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 250px);
+  height: 100%;
+  justify-content: center;
+  gap: 1rem;
+}
+#sportsearch{
+  border: 1px solid whitesmoke;
+  border-radius: 1rem;
+  text-align: center;
+  width: 80%;
+  height: 60px;
+  margin: 1rem 10% 1rem 10%;
+}
+#searchresults{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* START FOOTER SETTINGS ----------------------------------- */
+
+footer {
+  color:  var(--foreground);
+  border: 1px solid #000000;
+  margin: 0;
+  height: auto;
+  text-align: center;
+  background: var(--aspiro);
+  width: 100%;
+}
+
+/* LOADING PAGE SETTINGS ----------------------------------- */
+
+#loading{
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  text-align: center;
+  justify-content: center;
+}
+
+/* MISC */
+.indented{
+  margin-left: 1rem;
+}
+.linebreak{
+  margin-top: 1rem;
+}
+
+#splitsearch{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: scroll;
+  gap: 1rem;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE 10+ */
+}
+#browsesearch{
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  justify-content: start;
+  gap: 0.5rem;
+}
+
+#splitmap{
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  width: 100%;
+  overflow-y: hidden;
+}
+@media screen and (max-width: 849px) {
+  .magic{
+    display: none;
+  }
+  #everything{
+    grid-template-columns: 1fr;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    max-height: 75vh;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE 10+ */
+  }
+}
+@media screen and (min-width: 850px) {
+  #everything{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    height: 100%;
+    max-height: 85vh;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE 10+ */
+  }
+}
+.splitsearch::-webkit-scrollbar {
+  background: transparent; /* Chrome/Safari/Webkit */
+  width: 0px;
+}
+.everything::-webkit-scrollbar {
+  background: transparent; /* Chrome/Safari/Webkit */
+  width: 0px;
+}

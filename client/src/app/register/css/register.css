@@ -1,0 +1,164 @@
+.title{
+  text-align: center;
+  font-size: 3rem;
+}
+.register-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 2rem;
+}
+
+.login-container {
+  display: inline-flex;
+  flex-direction: column; 
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+/* Boxes for options */
+.buttonText{
+  position: relative;
+  justify-content: center;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+}
+
+/* Hover animates the box */
+.box:hover {
+  transform: scale(1.05); 
+}
+
+.signupBox {
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  min-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  flex-direction: column;
+  width: 50%;
+  padding: 0.5rem;
+  background: var(--slate);
+  border: 1px solid black;
+  border-radius: 1rem;
+  align-self: center;
+  justify-content: center;
+}
+
+#regForm label{
+  display: flex;
+  width: 100%;
+  margin-left: 1rem;
+  text-align: left;
+  color: whitesmoke;
+  font-size: 1.2rem;
+}
+
+#regForm form{
+  display: flex;
+  width: 100%;
+}
+
+#regForm input{
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+#regForm select{
+  display: flex;
+  text-align: center;
+  border-radius: 0.5rem;
+  width: 90%;
+  padding: 0.5rem;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+#submitButton {
+  color: whitesmoke;
+  margin: 2rem;
+  background: var(--aspiro);
+  border-radius: 0.5rem;
+  text-align: center;
+  width: 50%;
+  border: 1px solid black;
+  margin-left: 25%;
+  margin-right: 25%;
+  padding: 0.5rem;
+}
+#submitButton:active{
+  background: var(--press);
+}
+.errormessage{
+  border-radius: 0.5rem;
+  padding: 1rem 2rem 1rem 2rem;
+  border: 1px solid black;
+  background: var(--error);
+  width: auto;
+  height: auto;
+  text-align: center;
+  align-self: center;
+}
+
+.error{
+  background: var(--slate);
+  padding: 0.25rem;
+  margin: 1rem 1.5rem 0.25rem 1.5rem;
+  border-radius: 0.5rem;
+  width: auto;
+  background: linear-gradient(0deg, #ff00003a,#ff5900a8);
+  border: 1px solid #000000;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.box{
+  display: grid;
+  background: var(--blackIce);
+  height: 80px;
+  width: 90%;
+  border: 1px solid rgb(58, 58, 58);
+  justify-content: center;
+  text-align: center;
+  align-content: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 300px;
+  cursor: pointer;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+.choicebuttons{
+  display: flex;
+  flex-direction:row;
+  max-width: 800px;
+  margin: 0 auto 0 auto;
+  height: 100px;
+}
+
+.box:active{
+  background: linear-gradient(0deg, rgba(33, 33, 33, 0.5), rgba(25, 25, 25, 0.5));
+}
+
+.messagebox{
+  background: var(--slate);
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  margin: 1rem;
+  color: rgb(181, 181, 181);
+  border: 1px solid gray;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
