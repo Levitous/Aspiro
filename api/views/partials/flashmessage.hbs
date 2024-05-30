@@ -1,0 +1,17 @@
+<div id="flashMessage">
+    {{#if messages.error}}
+        <div class="flashBox" id="errormessage">{{messages.error}}</div>
+    {{else}}
+        <div class="flashBox" id="successmessage">{{messages.success}}</div>
+    {{/if}}
+</div>
+
+<script>
+    const flashMessage = document.getElementById("flashMessage");
+    if(flashMessage){
+        var flash = document.getElementsByClassName("flashBox");
+        setTimeout(function(){
+            flash[0].classList.add("fade");
+        }, 2500);
+    }
+</script>

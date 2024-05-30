@@ -1,0 +1,248 @@
+"use strict";
+const mysql = require("mysql2/promise");
+require("dotenv").config();
+var db = require("../conf/database");
+const fs = require("fs");
+const csv = require("csv-parser");
+
+
+async function getConnection() {
+    return await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+    });
+  }
+
+async function loadSchools(results){
+    for(let i = 0; i < results.length; i++){
+        const addy = results[i].ADDR;
+        const city  = results[i].CITY;
+        const state = results[i].STABBR;
+        const name = results[i].INSTNM;
+        try {
+            const [schoolResult, _] = await db.execute(
+                `INSERT INTO Schools
+                (name, address, city, state)
+                VALUES (?, ?, ?, ?);`,
+                [name, addy, city, state]
+            );
+        } catch (error) {
+            console.log("Error: ", error);
+        }
+    }
+}
+
+async function loadOlympians(results){
+    for(let i = 0; i < results.length; i++){
+        const id = results[i].athlete_id;
+        const name  = results[i].name;
+        const university  = results[i].matched_university;
+        try {
+            // Insert University if needed, and obtain schoolID
+            var [schoolID, rows2] = await db.execute(
+                `SELECT schoolID FROM Schools WHERE name=?;`,
+                [university]
+            );
+            if(schoolID.length === 0){
+                continue; // no match - skip it.
+            }else{
+                schoolID = schoolID[0].schoolID;
+            }
+            const [olympianresult, _] = await db.execute(
+                `INSERT INTO Olympians
+                (olympianID, name, fk_schoolID)
+                VALUES (?,?,?);`,
+                [id, name, schoolID]
+            );
+        } catch (error) {
+            console.log("Error: ", error);
+        }
+    }
+}
+
+async function loadMedals(results){
+    for(let i = 0; i < results.length; i++){
+        const olympianID = results[i].athlete_id;
+        try{
+            const [result, _] = await db.execute(
+                `SELECT olympianID FROM Olympians WHERE olympianID=(?);`,
+                [olympianID]
+            );
+            if(result.length === 0){
+                // not in the list. go to next entry.
+                continue;
+            }
+            const [schoolresult, __] = await db.execute(
+                `SELECT fk_schoolID FROM Olympians WHERE olympianID=?`,
+                [olympianID]
+            );
+            const schoolID = schoolresult[0].fk_schoolID;
+            const year = results[i].edition.slice(0, 4);
+            const sport  = results[i].sport;
+            const medal = results[i].medal;
+            var medalENUM = 1; // for participating
+            if(medal === "Bronze"){
+                medalENUM = 2; // there were 2000 bronze medals and 14000 competitors last season
+            }else if(medal === "Silver"){
+                medalENUM = 3; // same number of medals, but higher clout.
+            }else if(medal === "Gold"){
+                medalENUM = 4; // highest value/clout, hardest to earn.
+            }
+            
+            // Let's make a weighted score based on medal type
+            // and year earned.
+
+            let cy = parseFloat(new Date().getFullYear());     // current year
+            let te = cy - parseFloat(year);                    // years elapsed
+            let w = Math.exp((-50 * te)/cy);                   // weight modifier
+            let score = w*parseFloat(medalENUM)*100
+            let intscore = Math.round(score);
+
+            // Insert Sport if needed, and obtain sportID
+            const [existingsport, rows1] = await db.execute(
+                `SELECT sportID FROM Sports WHERE name=?;`,
+                [sport]
+            );
+            var sportID = -1;
+            if(existingsport.length === 0){
+                const [sportresult, _] = await db.execute(
+                    `INSERT INTO Sports
+                    (name)
+                    VALUES (?);`,
+                    [sport]
+                );
+                sportID = sportresult.insertId;
+            }else{
+                sportID = existingsport[0].sportID;
+            }
+
+            const [medalresult, ___] = await db.execute(
+                `INSERT INTO Medals
+                (year, fk_olympianID, fk_sportID, medal) 
+                VALUES 
+                (?,?,?,?);`,
+                [year, olympianID, sportID, medalENUM]
+            );
+
+            const [unimedalresult, ____] = await db.execute(
+                `INSERT INTO UniversityMedals
+                (fk_schoolID, fk_medalID, score)
+                VALUES
+                (?,?,?);`,
+                [schoolID, medalresult.insertId, intscore]
+            );
+        } catch (error) {
+            console.log("Error: ", error);
+            return;
+        }
+    }
+}
+
+async function loadRanks(){
+    try{
+        // Calculate ranks for each school
+        const [rankResult, _] = await db.execute(
+            `SELECT fk_schoolID, SUM(score) AS totalScore,
+            DENSE_RANK() OVER (ORDER BY SUM(score) DESC) AS ranking
+            FROM UniversityMedals
+            GROUP BY fk_schoolID;`
+        );
+
+        // Update ranking for each school
+        for (const { fk_schoolID, ranking } of rankResult) {
+            const [updateResult, __] = await db.execute(
+            `UPDATE Schools
+             SET ranking = ?
+             WHERE schoolID = ?;`,
+            [ranking, fk_schoolID]
+            );
+        }
+    }catch(error){
+        console.log("Error: ", error);
+        return;
+    }
+}
+
+async function loadSportRanks(){
+    try {
+        const scores = await db.execute(`
+            SELECT fk_schoolID, fk_sportID, SUM(score) as score,
+            DENSE_RANK() OVER
+                (PARTITION BY fk_sportID ORDER BY SUM(score) DESC)
+                    as sportranking
+            FROM UniversityMedals
+            JOIN Medals ON UniversityMedals.fk_medalID = Medals.medalID
+            GROUP BY fk_schoolID, fk_sportID
+            ORDER BY fk_sportID ASC, score DESC;
+        `);
+
+        const schoolsportscores = scores[0].map(
+            ({ fk_schoolID, fk_sportID, score, sportranking }) => 
+            [fk_schoolID, fk_sportID, score || 0, sportranking]
+        );
+
+        for (let row of schoolsportscores) {
+            await db.execute(`
+                INSERT INTO SchoolSportScores
+                (fk_schoolID, fk_sportID, score, sportranking)
+                VALUES (?, ?, ?, ?);`, 
+                row
+            );
+        }
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+}
+
+async function cleanUpTables() {
+    try {
+
+        await db.execute(`
+            DELETE FROM Sports
+            WHERE sportID NOT IN (
+            SELECT fk_sportID
+            FROM Medals
+            WHERE year > 1980
+            );
+        `);
+        console.log("Deleted archaic sports from sport list.");
+
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+}
+
+async function main() {
+    const schools = [];
+    const olympians = [];
+    const medals = [];
+
+    fs.createReadStream("./public/schools.csv").pipe(csv()).on("data", (data)=> schools.push(data));
+    fs.createReadStream("./public/athletes.csv").pipe(csv()).on("data", (data)=> olympians.push(data));
+    fs.createReadStream("./public/medals.csv").pipe(csv()).on("data", (data)=> medals.push(data));
+
+    let connection = null;
+    connection = await getConnection();
+
+    await loadSchools(schools);
+    console.log("Loaded Universities into Database!");
+
+    await loadOlympians(olympians);
+    console.log("Loaded Olympians into Database!");
+
+    await loadMedals(medals);
+    console.log("Loaded Medals into Database!");
+
+    await loadRanks();
+    console.log("Ranked Universities!");
+
+    await loadSportRanks();
+    console.log("Ranked University sports!");
+
+    await cleanUpTables();
+
+    process.exit();
+}
+
+main();

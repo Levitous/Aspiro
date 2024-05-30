@@ -1,0 +1,533 @@
+"use strict";
+const mysql = require("mysql2/promise");
+require("dotenv").config();
+var db = require("../conf/database");
+
+function displayWarningMessage(warning) {
+  switch (warning.Code) {
+    case 1007:
+      console.log(`Skipping Database Creation --> ${warning.Message}`);
+      break;
+    case 1050:
+      console.log(`Skipping Table Creation --> ${warning.Message}`);
+      break;
+  }
+}
+
+async function getConnection() {
+  return await mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+  });
+}
+
+async function makeDatabase(connection) {
+  const [result, _] = await connection.query(
+    `CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME};`
+  );
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Database!");
+  }
+}
+
+async function makeUsersTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Users (
+      userID INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+      firstname VARCHAR(64) NOT NULL,
+      lastname VARCHAR(64) NOT NULL,
+      username VARCHAR(64) NOT NULL UNIQUE,
+      email VARCHAR(128) NOT NULL UNIQUE,
+      password VARCHAR(256) NOT NULL,
+      resume VARCHAR(1024) DEFAULT NULL,
+      aboutuser VARCHAR(1024) DEFAULT NULL,
+      profilePhoto VARCHAR(1024) DEFAULT NULL,
+      type ENUM('athlete', 'faculty', 'admin') NOT NULL,
+      PRIMARY KEY (userID))
+    ENGINE=InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Users Table!");
+  }
+}
+
+async function makeSportsTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Sports (
+      sportID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      name VARCHAR(64) NOT NULL,
+      PRIMARY KEY (sportID),
+      UNIQUE INDEX sportID_UNIQUE (sportID ASC) VISIBLE,
+      UNIQUE INDEX name_UNIQUE (name ASC) VISIBLE)
+    ENGINE=InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Sports Table!");
+  }
+}
+
+async function makeAthletesTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Athletes (
+      fk_userEmail varchar(256) NOT NULL,
+      fk_sport INT unsigned DEFAULT NULL,
+      fk_school INT unsigned DEFAULT NULL,
+      fk_faculty INT unsigned DEFAULT NULL,
+      PRIMARY KEY (fk_userEmail),
+      KEY fk_sport_idx (fk_sport),
+      KEY fk_school_idx (fk_school),
+      CONSTRAINT fk_athlete_school
+	FOREIGN KEY (fk_school)
+	REFERENCES team6db.Schools (schoolID)
+	ON DELETE SET NULL
+	ON UPDATE CASCADE,
+      CONSTRAINT fk_athlete_sport
+	FOREIGN KEY (fk_sport)
+	REFERENCES team6db.Sports (sportID)
+	ON DELETE SET NULL
+	ON UPDATE CASCADE,
+      CONSTRAINT fk_athlete_userEmail
+	FOREIGN KEY (fk_userEmail)
+	REFERENCES team6db.Users (email)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE)
+    ENGINE=InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Athletes Table!");
+  }
+}
+
+async function makeFacultyTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Faculty (
+      fk_userEmail VARCHAR(128) NOT NULL,
+      fk_sport INT UNSIGNED NULL,
+      fk_school INT UNSIGNED NOT NULL,
+      PRIMARY KEY (fk_userEmail),
+      INDEX fk_sport_idx (fk_sport ASC) VISIBLE,
+      INDEX fk_school_idx (fk_school ASC) VISIBLE,
+      CONSTRAINT fk_faculty_userEmail
+        FOREIGN KEY (fk_userEmail)
+        REFERENCES team6db.Users (email)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      CONSTRAINT fk_faculty_sport
+        FOREIGN KEY (fk_sport)
+        REFERENCES team6db.Sports (sportID)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      CONSTRAINT fk_faculty_school
+        FOREIGN KEY (fk_school)
+        REFERENCES team6db.Schools (schoolID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE=InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Faculty Table!");
+  }
+}
+
+async function makeAdminsTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Admins (
+      fk_userEmail varchar(256) NOT NULL,
+      PRIMARY KEY (fk_userEmail),
+      CONSTRAINT fk_admin_userEmail
+	    FOREIGN KEY (fk_userEmail)
+	    REFERENCES team6db.Users (email)
+	    ON DELETE CASCADE
+	    ON UPDATE CASCADE)
+    ENGINE=InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Admins Table!");
+  }
+}
+
+async function makeSchoolsTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Schools (
+      schoolID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      name VARCHAR(256) NOT NULL,
+      address VARCHAR(256) NULL,
+      city VARCHAR(256) NOT NULL,
+      state VARCHAR(256) NOT NULL,
+      rating INT UNSIGNED NULL,
+      ranking INT UNSIGNED NOT NULL DEFAULT 0,
+      background VARCHAR(4096) NULL,
+      PRIMARY KEY (schoolID),
+      UNIQUE INDEX idUniversities_UNIQUE (schoolID ASC) VISIBLE)
+    ENGINE = InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Schools Table!");
+  }
+}
+
+/* user created ratings */
+async function makeSchoolRatingsTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.SchoolRatings (
+      ratingID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      rating INT NOT NULL DEFAULT 5,
+      fk_school INT UNSIGNED NOT NULL,
+      fk_userID INT UNSIGNED NOT NULL,
+      PRIMARY KEY (ratingID),
+      INDEX fk_school_idx (fk_school ASC) VISIBLE,
+      UNIQUE INDEX ratingID_UNIQUE (ratingID ASC) VISIBLE,
+      CONSTRAINT fk_rating_school
+        FOREIGN KEY (fk_school)
+        REFERENCES team6db.Schools (schoolID)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION,
+      CONSTRAINT fk_rating_userID
+        FOREIGN KEY (fk_userID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created SchoolRatings Table!");
+  }
+}
+
+/* calculated scores */
+async function makeSchoolSportScoresTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.SchoolSportScores (
+      schoolgradeID INT unsigned NOT NULL AUTO_INCREMENT,
+      score INT NOT NULL DEFAULT '0',
+      sportranking INT unsigned NULL,
+      fk_schoolID INT unsigned NOT NULL,
+      fk_sportID INT unsigned NOT NULL,
+      PRIMARY KEY (schoolgradeID),
+      UNIQUE KEY schoolgradeID_UNIQUE (schoolgradeID),
+      KEY fk_school_idx (fk_schoolID),
+      KEY fk_score_sport_idx (fk_sportID),
+      CONSTRAINT fk_score_schoolID
+        FOREIGN KEY (fk_schoolID)
+        REFERENCES team6db.Schools (schoolID)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+      CONSTRAINT fk_score_sportID
+        FOREIGN KEY (fk_sportID)
+        REFERENCES team6db.Sports (sportID)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE)
+    ENGINE=InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created SchoolSportScores Table!");
+  }
+}
+
+async function makeOlympiansTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.Olympians (
+      olympianID INT UNSIGNED NOT NULL,
+      name VARCHAR(256) NOT NULL,
+      fk_schoolID INT UNSIGNED NOT NULL,
+      PRIMARY KEY (olympianID),
+      UNIQUE INDEX idOlympians_UNIQUE (olympianID ASC) VISIBLE,
+      INDEX university_idx (fk_schoolID ASC) VISIBLE,
+      CONSTRAINT fk_olympian_university
+        FOREIGN KEY (fk_schoolID)
+        REFERENCES team6db.Schools (schoolID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Olympians Table!");
+  }
+}
+
+async function makePostsTable(connection) {
+  const [result, _] = await connection.query(
+    `CREATE TABLE IF NOT EXISTS team6db.Posts (
+      postID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      fk_userID INT UNSIGNED NOT NULL,
+      timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      text VARCHAR(1024) NULL,
+      PRIMARY KEY (postID),
+      UNIQUE INDEX postID_UNIQUE (postID ASC) VISIBLE,
+      INDEX fk_userID_idx (fk_userID ASC) VISIBLE,
+      CONSTRAINT fk_post_userID
+        FOREIGN KEY (fk_userID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`
+  )
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Posts Table!");
+  }
+}
+
+async function makePostPhotosTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.PostPhotos (
+      photoID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      fk_postID INT UNSIGNED NOT NULL,
+      description VARCHAR(256) NULL,
+      photo VARCHAR(4096) NOT NULL,
+      PRIMARY KEY (photoID),
+      UNIQUE INDEX photoID_UNIQUE (photoID ASC) VISIBLE,
+      INDEX fk_postID_idx (fk_postID ASC) VISIBLE,
+      CONSTRAINT fk_photo_postID
+        FOREIGN KEY (fk_postID)
+        REFERENCES team6db.Posts (postID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created PostPhotos Table!");
+  }
+}
+
+async function makePostVideosTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.PostVideos (
+      videoID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      fk_postID INT UNSIGNED NOT NULL,
+      description VARCHAR(256) NULL,
+      video VARCHAR(4096) NOT NULL,
+      PRIMARY KEY (videoID),
+      UNIQUE INDEX videoID_UNIQUE (videoID ASC) VISIBLE,
+      INDEX fk_postID_idx (fk_postID ASC) VISIBLE,
+      CONSTRAINT fk_video_postID
+        FOREIGN KEY (fk_postID)
+        REFERENCES team6db.Posts (postID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created PostVideos Table!");
+  }
+}
+
+async function makeMedalsTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.Medals (
+      medalID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      year INT NOT NULL,
+      fk_olympianID INT UNSIGNED NOT NULL,
+      fk_sportID INT UNSIGNED NOT NULL,
+      medal ENUM('PARTICIPATED','BRONZE', 'SILVER', 'GOLD') NOT NULL,
+      PRIMARY KEY (medalID),
+      UNIQUE INDEX medalID_UNIQUE (medalID ASC) VISIBLE,
+      INDEX fk_olympian_idx (fk_olympianID ASC) VISIBLE,
+      CONSTRAINT fk_medal_olympian
+        FOREIGN KEY (fk_olympianID)
+        REFERENCES team6db.Olympians (olympianID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created Medals Table!");
+  }
+}
+
+async function makeAthleteApplicationsTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.AthleteApplications (
+      applicationID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      fk_athleteUserID INT UNSIGNED NOT NULL,
+      fk_facultyUserID INT UNSIGNED NULL,
+      applicationStatus ENUM('pending', 'accepted', 'rejected') NOT NULL,
+      submittedAt DATETIME NOT NULL,
+      responseAt DATETIME NULL,
+      PRIMARY KEY (applicationID),
+      UNIQUE INDEX applicationID_UNIQUE (applicationID ASC) VISIBLE,
+      INDEX fk_athleteUserID_idx (fk_athleteUserID ASC) VISIBLE,
+      INDEX fk_facultyUserID_idx (fk_facultyUserID ASC) VISIBLE,
+      CONSTRAINT fk_athleteUserID
+        FOREIGN KEY (fk_athleteUserID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      CONSTRAINT fk_facultyUserID
+        FOREIGN KEY (fk_facultyUserID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created AthleteApplications Table!");
+  }
+}
+
+async function makeFacultyMessagesTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.FacultyMessages (
+      messageID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      fk_senderUserID INT UNSIGNED NOT NULL,
+      fk_receiverUserID INT UNSIGNED NOT NULL,
+      messageContent TEXT NOT NULL,
+      sentAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (messageID),
+      UNIQUE INDEX messageID_UNIQUE (messageID ASC) VISIBLE,
+      INDEX fk_senderUserID_idx (fk_senderUserID ASC) VISIBLE,
+      INDEX fk_receiverUserID_idx (fk_receiverUserID ASC) VISIBLE,
+      CONSTRAINT fk_senderUserID
+        FOREIGN KEY (fk_senderUserID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      CONSTRAINT fk_receiverUserID
+        FOREIGN KEY (fk_receiverUserID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created FacultyMessages Table!");
+  }
+}
+
+async function makeHelpRequestsTable(connection) {
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.HelpRequests (
+      helpRequestID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      fk_userID INT UNSIGNED NOT NULL,
+      requestContent TEXT NOT NULL,
+      submittedAt DATETIME NOT NULL,
+      status ENUM('open', 'closed') NOT NULL,
+      PRIMARY KEY (helpRequestID),
+      UNIQUE INDEX helpRequestID_UNIQUE (helpRequestID ASC) VISIBLE,
+      INDEX fk_userID_idx (fk_userID ASC) VISIBLE,
+      CONSTRAINT fk_helprequest_userID
+        FOREIGN KEY (fk_userID)
+        REFERENCES team6db.Users (userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+    const [warningResult, _] = await connection.query("SHOW WARNINGS");
+    displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created HelpRequests Table!");
+  }
+}
+
+async function makeUniMedalsTable(connection){
+  const [result, _] = await connection.query(`
+    CREATE TABLE IF NOT EXISTS team6db.UniversityMedals (
+    universitymedalID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    fk_schoolID INT UNSIGNED NOT NULL,
+    fk_medalID INT UNSIGNED NOT NULL,
+    score INT UNSIGNED NOT NULL,
+    PRIMARY KEY (universitymedalID),
+    UNIQUE INDEX universitymedalID_UNIQUE (universitymedalID ASC) VISIBLE,
+    INDEX fk_unimedal_universityID_idx (fk_schoolID ASC) VISIBLE,
+    INDEX fk_unimedal_medalID_idx (fk_medalID ASC) VISIBLE,
+    CONSTRAINT fk_unimedal_universityID
+      FOREIGN KEY (fk_schoolID)
+      REFERENCES team6db.Schools (schoolID)
+      ON DELETE NO ACTION
+      ON UPDATE NO ACTION,
+    CONSTRAINT fk_unimedal_medalID
+      FOREIGN KEY (fk_medalID)
+      REFERENCES team6db.Medals (medalID)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE)
+    ENGINE = InnoDB;`);
+  if (result && result.warningStatus > 0) {
+      const [warningResult, _] = await connection.query("SHOW WARNINGS");
+      displayWarningMessage(warningResult[0]);
+  } else {
+    console.log("Created UniversityMedals Table!");
+  }
+}
+
+
+(async function main() {
+  let connection = null;
+  try {
+    connection = await getConnection();
+    await makeDatabase(connection);
+    await connection.query(`USE ${process.env.DB_NAME}`);
+
+    /* First, create all tables that do not depend on others */
+    await makeUsersTable(connection);
+    await makeSportsTable(connection);
+    await makeSchoolsTable(connection);
+
+    /* Then, create tables that depend on the previously created tables */
+    await makeFacultyTable(connection);
+    await makeAdminsTable(connection);
+    await makeOlympiansTable(connection);
+    await makeAthletesTable(connection);
+    await makePostsTable(connection);
+
+    /* Create tables that depend on the existence of Schools, Users, or other base tables */
+    await makeSchoolRatingsTable(connection);
+    await makeSchoolSportScoresTable(connection);
+    await makePostPhotosTable(connection);
+    await makePostVideosTable(connection);
+    await makeMedalsTable(connection);
+    await makeUniMedalsTable(connection);
+    await makeAthleteApplicationsTable(connection);
+    await makeFacultyMessagesTable(connection);
+    await makeHelpRequestsTable(connection);
+
+    console.log("Database and table creation completed successfully.");
+
+    connection.close();
+    return;
+  } catch (error) {
+    console.error(error);
+    if (connection != null) {
+      connection.close();
+    }
+  }
+})();

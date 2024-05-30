@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>embed</title>
+    <link rel="icon" href="/public/favicon.ico" sizes="70x70" type="image/ico">
+    <meta charset="UTF-8" http-equiv="X-UA-Compatible"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" href="/public/css/style.css"/>
+    {{#each css}}
+        <link rel="stylesheet" type="text/css" href="/public/css/{{this}}"/>
+    {{/each}}
+    {{#each js}}
+        <script defer src="/public/js/{{this}}"></script>
+    {{/each}}
+  </head>
+  <body>
+    <div class="container">
+      <header></header>
+      {{{body}}}
+      <footer></footer>
+    </div>
+  </body>
+</html>

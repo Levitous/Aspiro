@@ -1,0 +1,10 @@
+<div class="aboutCard">
+        <p class="aboutCard-name">{{firstname}} {{lastname}}</p>
+        <p>
+                {{#if profilephoto}}
+                        <img class="aboutCard-img" src="/{{profilephoto}}">
+                {{else}}
+                        <img class="aboutCard-img" src="/../public/images/profilephotos/defaultprofilephoto.png">
+                {{/if}}
+        </p>
+</div>

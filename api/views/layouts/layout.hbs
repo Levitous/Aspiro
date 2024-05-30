@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{title}}</title>
+    <link rel="icon" href="/public/six.ico" sizes="70x70" type="image/ico">
+    <meta charset="UTF-8" http-equiv="X-UA-Compatible"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" href="/public/css/global.css"/>
+    {{#each js}}
+        <script defer src="/public/js/{{this}}"></script>
+    {{/each}}
+  </head>
+  <body>
+    <div id="layout">
+      {{{body}}}
+    </div>
+  </body>
+</html>
